@@ -19,8 +19,12 @@ PASOS = ["Inicio", "Sprints", "Demo", "Definition of Done", "Lecciones"]
 
 st.set_page_config(page_title="DMS Consulting · FinBank", page_icon="📈", layout="wide")
 st.markdown(f"""<style>
-.block-container {{padding-top: 1.2rem; max-width: 1150px;}}
-.stButton > button {{width: 100%; border-radius: 10px; font-weight: 600;}}
+.block-container {{padding-top: 3.5rem; max-width: 1150px;}}
+div[data-testid="stButton"], div[data-testid="stDownloadButton"] {{width: 100%;}}
+div[data-testid="stButton"] > button {{width: 100%; border-radius: 10px; font-weight: 600;}}
+.grid {{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px;}}
+.kpi {{background:#EEF3F9; border-radius:12px; padding:14px 16px;}}
+.kpi b {{display:block; font-size:1.55rem; color:{NAVY};}} .kpi span {{font-size:.8rem; color:#4A6585;}}
 .card {{background:#fff; border:1px solid #D6E2F0; border-top:4px solid {BLUE}; border-radius:14px;
         padding:16px 18px; height:100%;}}
 .card h4 {{margin:0 0 6px 0; color:{NAVY};}}
@@ -56,6 +60,12 @@ SPRINTS = {
                       ["Data Collection & Cleaning", 5, "⏳ Pasa al Sprint 3"]],
     },
 }
+
+
+def cards(items):
+    """Tarjetas en grilla: todas de la misma altura. items = [(título, html, clase)]."""
+    html = "".join(f"<div class='card {c}'><h4>{t}</h4>{d}</div>" for t, d, c in items)
+    st.markdown(f"<div class='grid'>{html}</div>", unsafe_allow_html=True)
 
 
 def burndown(nombre):
@@ -131,14 +141,23 @@ if paso == 0:
     st.markdown("<div class='hero'><h1>Ejecución ágil del proyecto predictivo FinBank</h1>"
                 "<p>Scrum + XP · 2 sprints · incremento entregado a FinBank S.A.</p></div>", unsafe_allow_html=True)
     st.write("")
-    st.write("**Este recorrido te guía en 4 pasos.** Usa los botones de arriba o *Siguiente* para avanzar.")
-    c = st.columns(4)
-    guia = [("2 · Sprints", "Velocity, historias y burndown de cada sprint."),
-            ("3 · Demo", "El pipeline de validación de datos corriendo en vivo."),
-            ("4 · Definition of Done", "Evidencia: PRs, TDD y prácticas XP."),
-            ("5 · Lecciones", "Retrospectiva y plan del Sprint 3.")]
-    for col, (t, d) in zip(c, guia):
-        col.markdown(f"<div class='card'><h4>{t}</h4>{d}</div>", unsafe_allow_html=True)
+    kpis = [("$420,000M COP", "Cartera administrada"), ("125,000", "Clientes"),
+            ("$77,000M COP", "Exposición a morosidad y churn"), ("12 semanas", "Plan CRISP-DM")]
+    st.markdown("<div class='grid'>" + "".join(f"<div class='kpi'><b>{v}</b><span>{t}</span></div>" for v, t in kpis)
+                + "</div>", unsafe_allow_html=True)
+    st.write("")
+    izq, der = st.columns([2, 3])
+    fig, ax = plt.subplots(figsize=(3.8, 3.2))
+    ax.pie([58800, 18200], labels=["Morosidad\n$58,800M", "Churn\n$18,200M"], colors=[NAVY, BLUE],
+           startangle=90, wedgeprops=dict(width=.42, edgecolor="white"), textprops={"fontsize": 8})
+    ax.text(0, 0, "$77,000M\nexposición", ha="center", va="center", fontsize=9, color=NAVY, fontweight="bold")
+    izq.pyplot(fig)
+    der.markdown("**Este recorrido te guía en 4 pasos.** Usa los botones de arriba o *Siguiente* para avanzar.")
+    with der:
+        cards([("2 · Sprints", "Velocity, historias y burndown de cada sprint.", ""),
+               ("3 · Demo", "El pipeline de validación de datos corriendo en vivo.", ""),
+               ("4 · Definition of Done", "Evidencia: PRs, TDD y prácticas XP.", ""),
+               ("5 · Lecciones", "Retrospectiva y plan del Sprint 3.", "")])
     st.write("")
     st.button("Comenzar recorrido ▶", on_click=ir, args=(1,), type="primary")
 
@@ -159,6 +178,21 @@ elif paso == 1:
         ax.spines[["top", "right"]].set_visible(False)
         izq, _ = st.columns([3, 2])
         izq.pyplot(fig)
+        p1, p2 = st.columns(2)
+        p1.progress(8 / 11, text="Sprint 1 · 73% de lo comprometido")
+        p2.progress(11 / 16, text="Sprint 2 · 69% de lo comprometido")
+        st.markdown("**Hoja de ruta del proyecto (12 semanas)**")
+        fases = [("1 · Diagnóstico y gobierno", 1, 2, NAVY), ("2 · Requisitos y datos", 3, 3, BLUE),
+                 ("3 · Modelado", 6, 4, "#5C8FC7"), ("4 · Validación y despliegue", 10, 3, LIGHT)]
+        fig, ax = plt.subplots(figsize=(7, 2.3))
+        for i, (n, ini, dur, col) in enumerate(fases):
+            ax.barh(i, dur, left=ini - 1, color=col, edgecolor="white")
+            ax.text(ini - 1 + dur / 2, i, f"sem {ini}–{ini + dur - 1}", ha="center", va="center",
+                    color="white" if col != LIGHT else NAVY, fontsize=8)
+        ax.set_yticks(range(4), [f[0] for f in fases], fontsize=8); ax.invert_yaxis()
+        ax.set_xticks(range(0, 13, 2)); ax.set_xlabel("Semana")
+        ax.spines[["top", "right"]].set_visible(False)
+        st.pyplot(fig)
         st.info("**Desvío clave:** *Governance & Charter Approval* se planeó para el día 10 y cerró el día 16. "
                 "Se trabajó en paralelo y el impacto fue de 1–2 días hábiles, absorbido por la reserva de "
                 "contingencia (10 días).")
@@ -205,7 +239,7 @@ elif paso == 2:
             c1, c2, c3, c4 = st.columns(4)
             c1.metric("Registros", len(df)); c2.metric("Inconsistencias", len(errores))
             c3.metric("Registros con error", len(ids_malos)); c4.metric("Pasan a modelado", len(limpio))
-            t1, t2, t3, t4 = st.tabs(["Reporte del pipeline", "Detalle por registro", "Base limpia", "Distribución de score"])
+            t1, t2, t3, t4, t5 = st.tabs(["Reporte del pipeline", "Detalle por registro", "Base limpia", "Distribución de score", "Completitud"])
             with t1:
                 st.caption("Salida de `finbank.validators.validate_dataset`")
                 if errores:
@@ -229,6 +263,18 @@ elif paso == 2:
                 izq, _ = st.columns([3, 2])
                 izq.pyplot(fig)
 
+            with t5:
+                comp = (1 - df[list(df.columns)].isna().mean()) * 100
+                fig, ax = plt.subplots(figsize=(6, 2.8))
+                ax.barh(comp.index, comp.values, color=[NAVY if v == 100 else "#C0392B" for v in comp.values])
+                ax.set_xlim(0, 100); ax.set_xlabel("% de registros con dato"); ax.invert_yaxis()
+                for i, v in enumerate(comp.values):
+                    ax.text(min(v, 94), i, f"{v:.0f}%", va="center", ha="right", color="white", fontsize=8)
+                ax.spines[["top", "right"]].set_visible(False)
+                izq, _ = st.columns([3, 2])
+                izq.pyplot(fig)
+                st.caption("En rojo: columnas con datos faltantes.")
+
 # ---------- 4. DoD ----------
 elif paso == 3:
     st.header("Definition of Done")
@@ -242,28 +288,22 @@ elif paso == 3:
     ], columns=["Historia", "Artefacto", "Pull Request", "Commits TDD", "DoD"])
     st.dataframe(hist, hide_index=True)
     st.subheader("Prácticas XP")
-    c = st.columns(4)
-    xp = [("Pair programming", "Piloto y copiloto en diagnóstico, requisitos y arquitectura."),
-          ("TDD", "Ciclo rojo → verde → refactor con la suite de pruebas."),
-          ("Integración continua", "Ramas por funcionalidad y PRs revisados antes del merge."),
-          ("Refactoring", "Validadores divididos en funciones de responsabilidad única.")]
-    for col, (t, d) in zip(c, xp):
-        col.markdown(f"<div class='card'><h4>{t}</h4>{d}</div>", unsafe_allow_html=True)
+    cards([("Pair programming", "Piloto y copiloto en diagnóstico, requisitos y arquitectura.", ""),
+           ("TDD", "Ciclo rojo → verde → refactor con la suite de pruebas.", ""),
+           ("Integración continua", "Ramas por funcionalidad y PRs revisados antes del merge.", ""),
+           ("Refactoring", "Validadores divididos en funciones de responsabilidad única.", "")])
     st.write("")
     st.link_button("Ver repositorio en GitHub ↗", "https://github.com/AndresAvella09/finbank-analytics")
 
 # ---------- 5. Lecciones ----------
 else:
     st.header("Lecciones aprendidas y plan de mejora")
-    c1, c2, c3 = st.columns(3)
-    c1.markdown("<div class='card'><h4>▶ Start</h4>• Comprometer puntos según velocity real (8–11)<br>"
-                "• Dividir historias en tareas ≤ 3 pts<br>• Trabajo en paralelo con criterios acordados<br>"
-                "• Commits con <i>Co-authored-by</i></div>", unsafe_allow_html=True)
-    c2.markdown("<div class='card stop'><h4>■ Stop</h4>• Comprometer más puntos de los que permite la velocity<br>"
-                "• Dejar tarjetas para la segunda semana<br>• Esperar aprobaciones sin plan B</div>", unsafe_allow_html=True)
-    c3.markdown("<div class='card cont'><h4>⟳ Continue</h4>• Tablero Kanban con checklist de 3 ítems<br>"
-                "• Revisión por pares antes de Done<br>• Dailies cortas<br>• Etiquetas por fase del Charter</div>",
-                unsafe_allow_html=True)
+    cards([("Start", "• Comprometer puntos según velocity real (8–11)<br>• Dividir historias en tareas ≤ 3 pts<br>"
+                     "• Trabajo en paralelo con criterios acordados<br>• Commits con <i>Co-authored-by</i>", ""),
+           ("Stop", "• Comprometer más puntos de los que permite la velocity<br>• Dejar tarjetas para la segunda semana<br>"
+                    "• Esperar aprobaciones sin plan B", "stop"),
+           ("Continue", "• Tablero Kanban con checklist de 3 ítems<br>• Revisión por pares antes de Done<br>"
+                        "• Dailies cortas<br>• Etiquetas por fase del Charter", "cont")])
     st.write("")
     st.success("**Sprint 3:** planear entre 9 y 10 puntos, considerando el trabajo pendiente de Data Collection & Cleaning.")
     st.write("¡Gracias! Quedamos atentos a sus preguntas.")
