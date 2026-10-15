@@ -3,6 +3,9 @@ import re
 import sys
 from pathlib import Path
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 
@@ -92,12 +95,22 @@ if pagina.startswith("1"):
     c2.metric("Velocity Sprint 2", "11 pts", "de 16 comprometidos")
     c3.metric("Velocity promedio", "9.5 pts")
     st.subheader("Estimado vs. real")
-    st.bar_chart(SPRINTS.set_index("Sprint"))
+    fig, ax = plt.subplots(figsize=(7, 3))
+    SPRINTS.set_index("Sprint").plot.bar(ax=ax, rot=0, color=["#9bb7d4", "#0b5a8e"])
+    ax.set_ylabel("Puntos")
+    ax.spines[["top", "right"]].set_visible(False)
+    st.pyplot(fig)
     st.subheader("Burndown")
     cols = st.columns(2)
     for col, (nombre, cfg) in zip(cols, BURNDOWN.items()):
         col.caption(nombre)
-        col.line_chart(burndown_df(cfg["total"], cfg["cierres"]))
+        bd = burndown_df(cfg["total"], cfg["cierres"])
+        fig, ax = plt.subplots(figsize=(5, 3))
+        ax.plot(bd.index, bd["Ideal"], "--", color="gray", label="Ideal")
+        ax.step(bd.index, bd["Real"], where="post", color="#0b5a8e", label="Real")
+        ax.set_xlabel("Día hábil"); ax.set_ylabel("Puntos restantes"); ax.legend()
+        ax.spines[["top", "right"]].set_visible(False)
+        col.pyplot(fig)
     st.info("Desvío clave: *Governance & Charter Approval* se planeó para el día 10 y cerró el día 16. "
             "Se trabajó en paralelo y el impacto fue de 1–2 días hábiles, absorbido por la reserva de "
             "contingencia (10 días).")
@@ -152,8 +165,11 @@ elif pagina.startswith("2"):
     st.download_button("Descargar CSV limpio", limpio.to_csv(index=False).encode(), "clientes_limpio.csv")
 
     st.subheader("Distribución de score de riesgo")
-    st.bar_chart(pd.cut(df["score_riesgo"], bins=range(300, 900, 50)).value_counts().sort_index()
-                 .rename(lambda x: f"{x.left}-{x.right}"))
+    fig, ax = plt.subplots(figsize=(7, 3))
+    ax.hist(df["score_riesgo"].dropna(), bins=range(300, 900, 50), color="#0b5a8e", edgecolor="white")
+    ax.set_xlabel("score_riesgo"); ax.set_ylabel("Clientes")
+    ax.spines[["top", "right"]].set_visible(False)
+    st.pyplot(fig)
 
 # ---------- 3. DoD ----------
 elif pagina.startswith("3"):
