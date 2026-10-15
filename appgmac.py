@@ -194,7 +194,7 @@ elif paso == 1:
         ax.set_xticks(range(0, 13, 2)); ax.set_xlabel("Semana")
         ax.spines[["top", "right"]].set_visible(False)
         st.pyplot(fig)
-        st.info("**Desvío clave:** *Governance & Charter Approval* se planeó para el día 10 y cerró el día 16. "
+        st.info("**Desvío importante:** *Governance & Charter Approval* se planeó para el día 10 y cerró el día 16. "
                 "Se trabajó en paralelo y el impacto fue de 1–2 días hábiles, absorbido por la reserva de "
                 "contingencia (10 días).")
     else:
