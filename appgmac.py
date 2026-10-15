@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from finbank.validators import validate_dataset  # noqa: E402  (código real del equipo, US-04)
 
 NAVY, BLUE, LIGHT = "#12335B", "#0B5FAE", "#9BB7D4"
+REPO = "https://github.com/AndresAvella09/finbank-analytics"  # confirmar que es el repo oficial
 LOGO, DATA = ROOT / "assets" / "dms_logo.png", ROOT / "data" / "sample_clientes.csv"
 PASOS = ["Inicio", "Sprints", "Demo", "Definition of Done", "Lecciones"]
 
@@ -293,7 +294,29 @@ elif paso == 3:
            ("Integración continua", "Ramas por funcionalidad y PRs revisados antes del merge.", ""),
            ("Refactoring", "Validadores divididos en funciones de responsabilidad única.", "")])
     st.write("")
-    st.link_button("Ver repositorio en GitHub ↗", "https://github.com/AndresAvella09/finbank-analytics")
+    st.subheader("Evidencia verificable")
+    st.caption("Cada enlace abre la prueba directamente en GitHub.")
+    e1, e2, e3 = st.columns(3)
+    e1.markdown("**Pull Requests revisados**")
+    e1.link_button("PR #5 · Dataset de muestra", f"{REPO}/pull/5")
+    e1.link_button("PR #6 · Diccionario de datos", f"{REPO}/pull/6")
+    e1.link_button("PR #8 · Refactor de validadores", f"{REPO}/pull/8")
+    e2.markdown("**Ciclo TDD (commits)**")
+    e2.link_button("Rojo · 089febe · tests", f"{REPO}/commit/089febe")
+    e2.link_button("Verde · ccf0bd0 · implementación", f"{REPO}/commit/ccf0bd0")
+    e2.link_button("Refactor · ceaa33b", f"{REPO}/commit/ceaa33b")
+    e3.markdown("**Bitácora y código**")
+    e3.link_button("Bitácora XP (pairing, pruebas, refactoring)", f"{REPO}/tree/main/bitacora")
+    e3.link_button("Antes vs. después del refactor", f"{REPO}/compare/b82764f...ceaa33b")
+    e3.link_button("Repositorio completo", REPO)
+    with st.expander("Refactorización: qué cambió"):
+        st.write("Antes (b82764f) había una sola función que hacía todas las validaciones. Después (ceaa33b) quedó "
+                 "dividida en funciones de una sola responsabilidad, con constantes y type hints:")
+        st.code("check_missing_columns(df)\ncheck_nulls(df)\ncheck_score_range(df, min_score, max_score)\n"
+                "check_variable_types(df, expected_types)\nvalidate_dataset(df)  # las orquesta y devuelve el reporte",
+                language="python")
+        st.write("Las pruebas escritas en el paso rojo siguieron pasando sin cambios, lo que confirma que el "
+                 "refactor no alteró el comportamiento.")
 
 # ---------- 5. Lecciones ----------
 else:
@@ -305,6 +328,17 @@ else:
            ("Continue", "• Tablero Kanban con checklist de 3 ítems<br>• Revisión por pares antes de Done<br>"
                         "• Dailies cortas<br>• Etiquetas por fase del Charter", "cont")])
     st.write("")
+    st.subheader("Por qué surgieron y cómo las abordamos")
+    with st.expander("Comprometimos más puntos de los que podíamos entregar"):
+        st.write("Los dos primeros sprints no tenían velocity histórica: se comprometieron 11 y 16 puntos y se "
+                 "completaron 8 y 11. Para el Sprint 3 usamos la velocity real promedio (9.5) como techo.")
+    with st.expander("El Charter se aprobó con retraso"):
+        st.write("Governance & Charter Approval se planeó para el día 10 y cerró el día 16 por depender de una "
+                 "aprobación externa. Se trabajó en paralelo y el impacto fue de 1–2 días hábiles, absorbido por la "
+                 "reserva de contingencia. Medida: dividir historias en tareas de 3 puntos o menos y tener un plan B.")
+    with st.expander("Por qué el Sprint 3 es de 9–10 puntos"):
+        st.write("Coincide con la velocity real y deja espacio para el trabajo arrastrado: Data Collection & "
+                 "Cleaning (5 pts) quedó pendiente al cierre del Sprint 2.")
     st.success("**Sprint 3:** planear entre 9 y 10 puntos, considerando el trabajo pendiente de Data Collection & Cleaning.")
     st.write("¡Gracias! Quedamos atentos a sus preguntas.")
 
